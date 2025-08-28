@@ -2,6 +2,7 @@ package com.example.springboottest.services;
 
 import com.example.springboottest.dtos.EmployeeCreateDTO;
 import com.example.springboottest.dtos.EmployeeDTO;
+import com.example.springboottest.dtos.EmployeeUpdateDTO;
 import com.example.springboottest.entities.Employee;
 import com.example.springboottest.repos.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +44,7 @@ public class EmployeeService {
         return repository.findById(id).map(this::toDTO).orElseThrow(() -> new RuntimeException("Employee not found"));
     }
 
-    public EmployeeDTO update(Long id, EmployeeCreateDTO dto) {  // Ngoại trừ email
+    public EmployeeDTO update(Long id, EmployeeUpdateDTO dto) {  // Ngoại trừ email
         Employee employee = repository.findById(id).orElseThrow(() -> new RuntimeException("Employee not found"));
         employee.setFullName(dto.getFullName());
         // Không update email

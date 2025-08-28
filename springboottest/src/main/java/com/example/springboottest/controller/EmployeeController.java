@@ -2,6 +2,7 @@ package com.example.springboottest.controller;
 
 import com.example.springboottest.dtos.EmployeeCreateDTO;
 import com.example.springboottest.dtos.EmployeeDTO;
+import com.example.springboottest.dtos.EmployeeUpdateDTO;
 import com.example.springboottest.services.EmployeeService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,16 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/employees")
+@CrossOrigin(
+    origins = {
+        "http://localhost:3000", 
+        "http://127.0.0.1:3000",
+        "https://your-frontend-domain.com"
+    },
+    methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH},
+    allowedHeaders = "*",
+    allowCredentials = "true"
+)
 public class EmployeeController {
     @Autowired
     private EmployeeService service;
@@ -37,7 +48,7 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> update(@PathVariable Long id, @Valid @RequestBody EmployeeCreateDTO dto) {
+    public ResponseEntity<Map<String, Object>> update(@PathVariable Long id, @Valid @RequestBody EmployeeUpdateDTO dto) {
         EmployeeDTO updated = service.update(id, dto);
         return buildResponse(true, updated, "Employee updated successfully", HttpStatus.OK);
     }
