@@ -4,6 +4,8 @@ import com.example.springboottest.dtos.EmployeeCreateDTO;
 import com.example.springboottest.dtos.EmployeeDTO;
 import com.example.springboottest.dtos.EmployeeUpdateDTO;
 import com.example.springboottest.entities.Employee;
+import com.example.springboottest.exception.EntityDuplicateException;
+import com.example.springboottest.exception.EntityNotFoundException;
 import com.example.springboottest.repos.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,6 +23,11 @@ public class EmployeeService {
     private BCryptPasswordEncoder passwordEncoder;  // Config ở bước sau
 
     public EmployeeDTO create(EmployeeCreateDTO dto) {
+        // Check if email already exists
+        if (repository.existsByEmail(dto.getEmail())) {
+            throw new EntityDuplicateException("Employee with email " + dto.getEmail() + " already exists");
+        }
+
         Employee employee = Employee.builder()
                 .fullName(dto.getFullName())
                 .email(dto.getEmail())
@@ -41,13 +48,17 @@ public class EmployeeService {
     }
 
     public EmployeeDTO findById(Long id) {
-        return repository.findById(id).map(this::toDTO).orElseThrow(() -> new RuntimeException("Employee not found"));
+        return repository.findById(id)
+            .map(this::toDTO)
+            .orElseThrow(() -> new EntityNotFoundException("Employee not found with id: " + id));
     }
 
-    public EmployeeDTO update(Long id, EmployeeUpdateDTO dto) {  // Ngoại trừ email
-        Employee employee = repository.findById(id).orElseThrow(() -> new RuntimeException("Employee not found"));
+    public EmployeeDTO update(Long id, EmployeeUpdateDTO dto) {
+        Employee employee = repository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Employee not found with id: " + id));
+
+        // Update the employee's information
         employee.setFullName(dto.getFullName());
-        // Không update email
         employee.setDateOfBirth(dto.getDateOfBirth());
         employee.setGender(dto.getGender());
         employee.setPhoneNumber(dto.getPhoneNumber());

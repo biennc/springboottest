@@ -3,6 +3,8 @@ package com.example.springboottest.controller;
 import com.example.springboottest.dtos.EmployeeCreateDTO;
 import com.example.springboottest.dtos.EmployeeDTO;
 import com.example.springboottest.dtos.EmployeeUpdateDTO;
+import com.example.springboottest.exception.EntityDuplicateException;
+import com.example.springboottest.exception.EntityNotFoundException;
 import com.example.springboottest.services.EmployeeService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +33,12 @@ public class EmployeeController {
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> create(@Valid @RequestBody EmployeeCreateDTO dto) {
-        EmployeeDTO created = service.create(dto);
-        return buildResponse(true, created, "Employee created successfully", HttpStatus.CREATED);
+        try {
+            EmployeeDTO created = service.create(dto);
+            return buildResponse(true, created, "Employee created successfully", HttpStatus.CREATED);
+        } catch (EntityDuplicateException e) {
+            throw new EntityDuplicateException(e.getMessage());
+        }
     }
 
     @GetMapping
@@ -43,26 +49,34 @@ public class EmployeeController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> findById(@PathVariable Long id) {
-        EmployeeDTO employee = service.findById(id);
-        return buildResponse(true, employee, "Success", HttpStatus.OK);
+        try {
+            EmployeeDTO employee = service.findById(id);
+            return buildResponse(true, employee, "Success", HttpStatus.OK);
+        } catch (EntityNotFoundException e) {
+            throw new EntityNotFoundException("Employee not found with id: " + id);
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> update(@PathVariable Long id, @Valid @RequestBody EmployeeUpdateDTO dto) {
-        EmployeeDTO updated = service.update(id, dto);
-        return buildResponse(true, updated, "Employee updated successfully", HttpStatus.OK);
+        try {
+            EmployeeDTO updated = service.update(id, dto);
+            return buildResponse(true, updated, "Employee updated successfully", HttpStatus.OK);
+        } catch (EntityNotFoundException e) {
+            throw new EntityNotFoundException("Employee not found with id: " + id);
+        } catch (EntityDuplicateException e) {
+            throw new EntityDuplicateException(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> delete(@PathVariable Long id) {
-        service.delete(id);
-        return buildResponse(true, null, "Employee deleted successfully", HttpStatus.OK);
-    }
-
-    // Xử lý exception global nếu cần, nhưng tạm dùng cách này
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> handleException(RuntimeException ex) {
-        return buildResponse(false, null, ex.getMessage(), HttpStatus.BAD_REQUEST);
+        try {
+            service.delete(id);
+            return buildResponse(true, null, "Employee deleted successfully", HttpStatus.OK);
+        } catch (EntityNotFoundException e) {
+            throw new EntityNotFoundException("Employee not found with id: " + id);
+        }
     }
 
     private ResponseEntity<Map<String, Object>> buildResponse(boolean success, Object data, String message, HttpStatus status) {
